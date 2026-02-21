@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Living Machines Media</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #000000;
+    --bg-card: rgba(255,255,255,0.03);
+    --bg-card-hover: rgba(255,255,255,0.06);
+    --text-primary: #e8e4df;
+    --text-secondary: #7d7a85;
+    --text-muted: #4a4752;
+    --accent-warm: #c4875a;
+    --accent-gold: #d4a574;
+    --accent-violet: #8b6cc1;
+    --accent-violet-bright: #a78bfa;
+    --accent-warm-glow: rgba(196, 135, 90, 0.15);
+    --accent-violet-glow: rgba(139, 108, 193, 0.12);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.1);
+    --gradient-hero: linear-gradient(135deg, var(--accent-violet-bright), var(--accent-gold));
+    --gradient-warm: linear-gradient(135deg, var(--accent-warm), var(--accent-violet));
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+    --max-width: 1080px;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.7;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--accent-warm);
+    color: var(--bg-primary);
+  }
+
+  a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  a:hover { color: var(--accent-warm); }
+
+  /* ─── Particle canvas ─── */
+  #particle-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ─── Background Grid ─── */
+  .bg-grid {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .bg-grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(139,108,193,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,108,193,0.07) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, rgba(0,0,0,0.6), transparent);
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, rgba(0,0,0,0.6), transparent);
+  }
+
+  /* ─── Floating shapes (CSS) ─── */
+  .shape {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .shape-ring {
+    width: 340px;
+    height: 340px;
+    border: 1px solid rgba(139,108,193,0.14);
+    border-radius: 50%;
+    top: 10%;
+    right: 6%;
+    animation: rotate-slow 80s linear infinite;
+  }
+
+  .shape-ring-inner {
+    width: 200px;
+    height: 200px;
+    border: 1px solid rgba(196,135,90,0.10);
+    border-radius: 50%;
+    top: calc(10% + 70px);
+    right: calc(6% + 70px);
+    animation: rotate-slow 55s linear infinite reverse;
+  }
+
+  .shape-diamond {
+    width: 100px;
+    height: 100px;
+    border: 1px solid rgba(139,108,193,0.12);
+    bottom: 22%;
+    left: 4%;
+    transform: rotate(45deg);
+    animation: float-diamond 16s ease-in-out infinite;
+  }
+
+  .shape-line-h {
+    width: 240px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(196,135,90,0.2), transparent);
+    top: 38%;
+    left: 1%;
+    animation: pulse-line 7s ease-in-out infinite;
+  }
+
+  .shape-line-v {
+    width: 1px;
+    height: 180px;
+    background: linear-gradient(180deg, transparent, rgba(139,108,193,0.18), transparent);
+    bottom: 12%;
+    right: 10%;
+    animation: pulse-line 9s ease-in-out infinite 2s;
+  }
+
+  .shape-dot-cluster {
+    top: 60%;
+    left: 6%;
+    width: 5px;
+    height: 5px;
+    background: rgba(196,135,90,0.35);
+    border-radius: 50%;
+    box-shadow:
+      22px -12px 0 rgba(139,108,193,0.25),
+      48px 6px 0 rgba(196,135,90,0.18),
+      14px 28px 0 rgba(139,108,193,0.2),
+      55px 32px 0 rgba(196,135,90,0.12);
+    animation: float-dots 14s ease-in-out infinite;
+  }
+
+  .shape-crosshair {
+    top: 78%;
+    right: 18%;
+    width: 50px;
+    height: 50px;
+    animation: float-cross 20s ease-in-out infinite;
+  }
+
+  .shape-crosshair::before {
+    content: '';
+    position: absolute;
+    width: 50px;
+    height: 1px;
+    top: 50%;
+    background: rgba(139,108,193,0.18);
+  }
+
+  .shape-crosshair::after {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 50px;
+    left: 50%;
+    background: rgba(139,108,193,0.18);
+  }
+
+  /* Small triangle */
+  .shape-tri {
+    top: 28%;
+    right: 30%;
+    width: 0;
+    height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-bottom: 30px solid rgba(196,135,90,0.08);
+    animation: float-dots 22s ease-in-out infinite;
+  }
+
+  /* Glow orbs */
+  .glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-1 {
+    width: 600px;
+    height: 600px;
+    background: var(--accent-violet-glow);
+    top: 0%;
+    right: -10%;
+    animation: drift-1 16s ease-in-out infinite alternate;
+  }
+
+  .glow-2 {
+    width: 500px;
+    height: 500px;
+    background: var(--accent-warm-glow);
+    bottom: 5%;
+    left: -10%;
+    animation: drift-2 20s ease-in-out infinite alternate-reverse;
+  }
+
+  .glow-3 {
+    width: 350px;
+    height: 350px;
+    background: rgba(139,108,193,0.07);
+    top: 45%;
+    left: 35%;
+    animation: drift-1 25s ease-in-out infinite alternate-reverse;
+  }
+
+  @keyframes drift-1 {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, -40px); }
+  }
+
+  @keyframes drift-2 {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-30px, 30px); }
+  }
+
+  @keyframes rotate-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes float-diamond {
+    0%, 100% { transform: rotate(45deg) translateY(0); }
+    50% { transform: rotate(45deg) translateY(-18px); }
+  }
+
+  @keyframes float-dots {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+
+  @keyframes float-cross {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-12px) rotate(5deg); }
+  }
+
+  @keyframes pulse-line {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ─── Content wrapper ─── */
+  .content-layer {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ─── Navigation ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    position: relative;
+    font-family: var(--font-body);
+  }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--gradient-hero);
+    transition: width 0.3s ease;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); }
+  .nav-links a:hover::after { width: 100%; }
+
+  .nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: var(--text-secondary);
+    margin: 5px 0;
+    transition: all 0.3s ease;
+  }
+
+  /* ─── Sections ─── */
+  section {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  .section-label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--gradient-hero);
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    padding-top: 100px;
+  }
+
+  .hero-content { position: relative; z-index: 1; }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 6.5vw, 80px);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    margin-bottom: 36px;
+    max-width: 780px;
+  }
+
+  .hero h1 .gradient-text {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-secondary);
+    max-width: 500px;
+    line-height: 1.8;
+    margin-bottom: 52px;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    padding: 14px 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: gap 0.3s ease;
+  }
+
+  .hero-cta:hover { color: var(--accent-gold); gap: 16px; }
+  .hero-cta svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
+  .hero-cta:hover svg { transform: translateX(4px); }
+
+  /* ─── Divider ─── */
+  .divider {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 40px;
+    height: 1px;
+  }
+
+  .divider-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-subtle) 30%, var(--border-subtle) 70%, transparent);
+  }
+
+  /* ─── About ─── */
+  .about { padding-top: 120px; padding-bottom: 120px; }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 48px;
+  }
+
+  .about-statement {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.35;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .about-statement .gradient-text {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .about-body {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.85;
+  }
+
+  .about-body p + p { margin-top: 20px; }
+
+  .coop-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  .coop-badge:hover {
+    border-color: var(--border-hover);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .coop-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-violet-bright);
+    box-shadow: 0 0 8px rgba(167,139,250,0.4);
+  }
+
+  /* ─── Services ─── */
+  .services { padding-top: 120px; padding-bottom: 120px; }
+
+  .services-intro {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.35;
+    font-weight: 600;
+    max-width: 580px;
+    margin-bottom: 64px;
+    letter-spacing: -0.01em;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border-subtle);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .service-card {
+    background: var(--bg-primary);
+    padding: 40px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.4s ease;
+  }
+
+  .service-card:hover { background: var(--bg-card-hover); }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gradient-hero);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .service-card:hover::before { opacity: 1; }
+
+  .service-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle at top right, rgba(139,108,193,0.08), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .service-card:hover::after { opacity: 1; }
+
+  .service-number {
+    font-family: var(--font-display);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.14em;
+    margin-bottom: 28px;
+    font-weight: 600;
+  }
+
+  .service-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .service-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+  }
+
+  /* ─── Portfolio ─── */
+  .portfolio { padding-top: 120px; padding-bottom: 120px; }
+
+  .portfolio-intro {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.35;
+    font-weight: 600;
+    max-width: 580px;
+    margin-bottom: 64px;
+    letter-spacing: -0.01em;
+  }
+
+  .project-list { display: flex; flex-direction: column; }
+
+  .project-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 40px;
+    padding: 32px 0;
+    border-top: 1px solid var(--border-subtle);
+    transition: padding-left 0.3s ease;
+    position: relative;
+  }
+
+  .project-item:last-child { border-bottom: 1px solid var(--border-subtle); }
+  .project-item:hover { padding-left: 16px; }
+
+  .project-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--gradient-warm);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .project-item:hover::before { opacity: 1; }
+
+  .project-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    transition: color 0.3s ease;
+    line-height: 1.3;
+  }
+
+  .project-item:hover .project-name { color: var(--accent-gold); }
+
+  .project-client {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+  }
+
+  .project-client a {
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .project-client a:hover {
+    color: var(--accent-gold);
+    border-color: var(--accent-gold);
+  }
+
+  .project-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding-top: 4px;
+  }
+
+  .project-tag {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .project-desc {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    max-width: 620px;
+    padding-top: 2px;
+  }
+
+  /* ─── Contact ─── */
+  .contact { padding-top: 120px; padding-bottom: 160px; }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 80px;
+    margin-top: 48px;
+  }
+
+  .contact-heading {
+    font-family: var(--font-display);
+    font-size: 40px;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .contact-heading .gradient-text {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding-top: 8px;
+  }
+
+  .contact-line {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .contact-line-label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .contact-line-value {
+    font-size: 15px;
+    color: var(--text-secondary);
+  }
+
+  .contact-line-value a {
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 2px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .contact-line-value a:hover {
+    color: var(--accent-gold);
+    border-color: var(--accent-gold);
+  }
+
+  /* ─── Footer ─── */
+  footer {
+    position: relative;
+    z-index: 2;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 40px 40px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 24px;
+  }
+
+  .footer-right a {
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── Scroll animations ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+
+    .nav-links {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0; right: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(24px);
+      flex-direction: column;
+      padding: 24px;
+      gap: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .nav-links.open { display: flex; }
+    .nav-toggle { display: block; }
+
+    section { padding: 0 24px; }
+    .divider { padding: 0 24px; }
+
+    .hero { min-height: 90vh; padding-top: 80px; }
+
+    .about-grid { grid-template-columns: 1fr; gap: 36px; }
+    .services-grid { grid-template-columns: 1fr; }
+
+    .project-item {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .project-meta { flex-wrap: wrap; gap: 8px; }
+
+    .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+    .contact-heading { font-size: 32px; }
+
+    .about, .services, .portfolio, .contact {
+      padding-top: 80px;
+      padding-bottom: 80px;
+    }
+
+    footer {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      padding: 32px 24px 40px;
+    }
+
+    .shape-ring, .shape-ring-inner, .shape-line-h, .shape-line-v, .shape-crosshair, .shape-tri {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Particle network canvas -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- Background layers -->
+<div class="bg-grid"></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+<div class="glow glow-3"></div>
+<div class="shape shape-ring"></div>
+<div class="shape shape-ring-inner"></div>
+<div class="shape shape-diamond"></div>
+<div class="shape shape-line-h"></div>
+<div class="shape shape-line-v"></div>
+<div class="shape shape-dot-cluster"></div>
+<div class="shape shape-crosshair"></div>
+<div class="shape shape-tri"></div>
+
+<!-- Content -->
+<div class="content-layer">
+
+<!-- Navigation -->
+<nav>
+  <a href="#" class="nav-logo">Living Machines Media</a>
+  <button class="nav-toggle" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#portfolio">Work</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <h1 class="reveal">Technology in service<br>to <span class="gradient-text">human media</span></h1>
+    <p class="hero-sub reveal">Living Machines Media is a consultancy at the intersection of ethical AI, immersive technology, and media — building strategies that serve people, not just platforms.</p>
+    <a href="#contact" class="hero-cta reveal">
+      Start a conversation
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-line"></div></div>
+
+<!-- About -->
+<section class="about" id="about">
+  <div class="section-label reveal">About</div>
+  <div class="about-grid">
+    <div class="about-statement reveal">
+      The most powerful technology is built <span class="gradient-text">with people</span>, not just for them.
+    </div>
+    <div class="about-body reveal">
+      <p>Living Machines Media works at the convergence of emerging technology and media — helping organizations navigate AI, immersive reality, and new digital paradigms with intention and integrity.</p>
+      <p>Our approach is grounded in the belief that technology should amplify human creativity, protect individual agency, and distribute opportunity broadly. We bring a cooperative ethos to every engagement — informed by real experience building within the worker-owned tech ecosystem.</p>
+      <a href="https://colab.coop" target="_blank" rel="noopener" class="coop-badge">
+        <span class="coop-badge-dot"></span>
+        Member of CoLab Cooperative
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-line"></div></div>
+
+<!-- Services -->
+<section class="services" id="services">
+  <div class="section-label reveal">Services</div>
+  <h2 class="services-intro reveal">Strategic consulting for organizations shaping the next era of media and technology.</h2>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-number">01</div>
+      <h3 class="service-title">Ethical AI Strategy</h3>
+      <p class="service-desc">Guiding organizations to adopt AI with transparency, fairness, and accountability — from policy development to implementation frameworks that center human wellbeing.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-number">02</div>
+      <h3 class="service-title">Immersive Media Consulting</h3>
+      <p class="service-desc">Strategic advising on XR, spatial computing, and immersive experiences — helping brands and creators harness emerging platforms without losing sight of story and substance.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-number">03</div>
+      <h3 class="service-title">Business Development</h3>
+      <p class="service-desc">Building partnerships, go-to-market strategies, and growth pathways for technology organizations — with particular expertise in cooperative and mission-driven models.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-number">04</div>
+      <h3 class="service-title">Media &amp; Technology Communications</h3>
+      <p class="service-desc">Translating complex technology narratives into compelling stories for press, partners, and audiences — from XR launches to AI-powered initiatives.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-number">05</div>
+      <h3 class="service-title">Experiential Marketing</h3>
+      <p class="service-desc">Concepting and producing immersive brand activations that merge physical and digital — AR installations, virtual showrooms, and interactive campaigns.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-number">06</div>
+      <h3 class="service-title">Workshops &amp; Speaking</h3>
+      <p class="service-desc">Engaging sessions for teams and events on AI ethics, immersive technology, and the responsible tech movement — practical, accessible, and tailored to your audience.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-line"></div></div>
+
+<!-- Portfolio -->
+<section class="portfolio" id="portfolio">
+  <div class="section-label reveal">Selected Work</div>
+  <h2 class="portfolio-intro reveal">Projects spanning immersive media, business development, and strategic communications.</h2>
+  <div class="project-list">
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">US Market Launch &amp; Business Development</div>
+        <div class="project-client"><a href="https://yordstudio.com/" target="_blank" rel="noopener">Yord Studio</a> · European XR &amp; AI creative studio</div>
+        <p class="project-desc">Led all US market entry efforts for Yord, a Prague-based creative technology studio trusted by Apple, Meta, LEGO, and Bentley. Designed and executed the go-to-market strategy, cultivated partnerships, and built the sales pipeline to establish the studio's American presence.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">Go-to-Market</span>
+        <span class="project-tag">Business Dev</span>
+      </div>
+    </div>
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">Strategic Partnership &amp; Business Development</div>
+        <div class="project-client"><a href="https://gencitylabs.com/" target="_blank" rel="noopener">Gen City Labs</a> · Experiential design agency</div>
+        <p class="project-desc">Ongoing strategic partner to Gen City Labs, an experiential design agency producing immersive event activations and campaigns for major brands. Driving new business opportunities and collaborating on jointly produced projects that bring immersive technology to live audiences.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">Partnership</span>
+        <span class="project-tag">Experiential</span>
+      </div>
+    </div>
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">Event Production &amp; Community Programming</div>
+        <div class="project-client">XR Guild</div>
+        <p class="project-desc">Launched and managed a series of in-person immersive technology events and meetups, bringing together communities of up to 100 attendees to connect, demo, and discuss the future of XR and spatial computing.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">Events</span>
+        <span class="project-tag">Community</span>
+      </div>
+    </div>
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">Publicity &amp; Communications</div>
+        <div class="project-client">Polys WebXR Awards</div>
+        <p class="project-desc">Directed press communications for the Polys Awards, an annual program celebrating industry leaders in WebXR creation and advocacy.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">Communications</span>
+      </div>
+    </div>
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">XR Experiential Campaign Ideation</div>
+        <div class="project-client">Burton Snowboards</div>
+        <p class="project-desc">Developed an experiential marketing campaign concept integrating AR, AI-powered mapping, and immersive brand storytelling for Burton Snowboards.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">Experiential</span>
+      </div>
+    </div>
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">Product Ideation &amp; UX Design</div>
+        <div class="project-client">ScavengeAR</div>
+        <p class="project-desc">Concept development and UX design for ScavengeAR, a New York City location-based augmented reality scavenger hunt app with social features — from initial concept through full product roadmap.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">UX / Product</span>
+      </div>
+    </div>
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">XR Market Analysis</div>
+        <div class="project-client">Nike</div>
+        <p class="project-desc">Comprehensive review and strategic analysis of Nike's shift toward digital — examining XR business use cases across retail, community, and brand experience.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">Research</span>
+      </div>
+    </div>
+    <div class="project-item reveal">
+      <div>
+        <div class="project-name">Research &amp; Advocacy</div>
+        <div class="project-client">All Tech Is Human</div>
+        <p class="project-desc">Research contributor and panelist for All Tech Is Human, contributing to the Responsible Tech Guide and Ecosystem Pulse Report — flagship resources for the ethical technology movement.</p>
+      </div>
+      <div class="project-meta">
+        <span class="project-tag">Research</span>
+        <span class="project-tag">Ethics</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-line"></div></div>
+
+<!-- Contact -->
+<section class="contact" id="contact">
+  <div class="section-label reveal">Contact</div>
+  <div class="contact-grid">
+    <h2 class="contact-heading reveal">
+      Let's build something<br><span class="gradient-text">worth building.</span>
+    </h2>
+    <div class="contact-details reveal">
+      <div class="contact-line">
+        <span class="contact-line-label">Email</span>
+        <span class="contact-line-value"><a href="mailto:claire@livingmachinesmedia.com">claire@livingmachinesmedia.com</a></span>
+      </div>
+      <div class="contact-line">
+        <span class="contact-line-label">LinkedIn</span>
+        <span class="contact-line-value"><a href="https://www.linkedin.com/in/claire-weingarten/" target="_blank" rel="noopener">Claire Weingarten</a></span>
+      </div>
+      <div class="contact-line">
+        <span class="contact-line-label">Location</span>
+        <span class="contact-line-value">Brooklyn, New York</span>
+      </div>
+      <div class="contact-line">
+        <span class="contact-line-label">Network</span>
+        <span class="contact-line-value"><a href="https://colab.coop" target="_blank" rel="noopener">CoLab Cooperative</a></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <span>&copy; 2026 Living Machines Media</span>
+  <div class="footer-right">
+    <a href="mailto:claire@livingmachinesmedia.com">Email</a>
+    <a href="https://www.linkedin.com/in/claire-weingarten/" target="_blank" rel="noopener">LinkedIn</a>
+  </div>
+</footer>
+
+</div><!-- end content-layer -->
+
+<!-- Scripts -->
+<script>
+  // ─── Particle network ───
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let mouse = { x: null, y: null };
+  const PARTICLE_COUNT = 60;
+  const CONNECTION_DIST = 160;
+  const MOUSE_DIST = 200;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = (Math.random() - 0.5) * 0.4;
+      this.radius = Math.random() * 1.8 + 0.5;
+      // Random color: violet or warm
+      this.isViolet = Math.random() > 0.4;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+      if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+    }
+    draw() {
+      const color = this.isViolet ? 'rgba(167,139,250,' : 'rgba(212,165,116,';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = color + '0.5)';
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECTION_DIST) {
+          const opacity = (1 - dist / CONNECTION_DIST) * 0.15;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(139,108,193,${opacity})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+
+      // Mouse interaction
+      if (mouse.x !== null) {
+        const dx = particles[i].x - mouse.x;
+        const dy = particles[i].y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < MOUSE_DIST) {
+          const opacity = (1 - dist / MOUSE_DIST) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = `rgba(196,135,90,${opacity})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+
+    // Also move glow orbs
+    const x = (e.clientX / window.innerWidth - 0.5) * 2;
+    const y = (e.clientY / window.innerHeight - 0.5) * 2;
+    document.querySelectorAll('.glow').forEach((glow, i) => {
+      const speed = (i + 1) * 10;
+      glow.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+    });
+  });
+
+  document.addEventListener('mouseleave', () => {
+    mouse.x = null;
+    mouse.y = null;
+  });
+
+  // ─── Scroll reveal ───
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, i * 60);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  // Close mobile nav on link click
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.remove('open');
+    });
+  });
+</script>
+
+</body>
+</html>
